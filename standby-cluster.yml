@@ -1,0 +1,33 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: hippo-standby
+spec:
+  postgresVersion: 16
+  instances:
+    - name: standby-instance1
+      dataVolumeClaimSpec:
+        accessModes:
+        - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: 1Gi
+  backups:
+    pgbackrest:
+      repos:
+      - name: repo4
+        volume:
+          volumeClaimSpec:
+            accessModes:
+            - "ReadWriteOnce"
+            resources:
+              requests:
+                storage: 4Gi
+  #customTLSSecret:
+  #  name: cluster-cert
+  #customReplicationTLSSecret:
+  #  name: replication-cert
+  standby:
+    enabled: true
+    host: "10.1.0.63"
+    port: 5432

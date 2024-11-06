@@ -1,0 +1,9 @@
+spec:
+  patroni:
+    dynamicConfiguration:
+      standby_cluster:
+        host: "hippo-primary.postgres-operator.svc"
+        port: 5432
+        primary_slot_name: main_repslot
+        create_replica_methods:
+        - basebackup

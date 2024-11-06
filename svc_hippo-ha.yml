@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2024-10-26T08:14:43Z"
+  labels:
+    postgres-operator.crunchydata.com/cluster: hippo
+    postgres-operator.crunchydata.com/patroni: hippo-ha
+  name: hippo-ha
+  namespace: postgres-operator
+  ownerReferences:
+  - apiVersion: postgres-operator.crunchydata.com/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: PostgresCluster
+    name: hippo
+    uid: cac18f4d-fe1e-471a-b413-9944cf4a032b
+  resourceVersion: "154602"
+  uid: eaedfdf4-0fc3-434d-985d-49f86ff23e77
+spec:
+  service:
+    metadata:
+      annotations:
+        my-annotation: value1
+      labels:
+        my-label: value2
+  ports:
+  - name: postgres
+    port: 5432
+    protocol: TCP
+    targetPort: postgres
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+PG_CLUSTER_USER_SECRET_NAME=hippo-pguser-rhino
+export PGPASSWORD=$(kubectl get secrets -n postgres-operator "${PG_CLUSTER_USER_SECRET_NAME}" -o go-template='{{.data.password | base64decode}}') 
+export PGUSER=$(kubectl get secrets -n postgres-operator "${PG_CLUSTER_USER_SECRET_NAME}" -o go-template='{{.data.user | base64decode}}')  
+export PGDATABASE=$(kubectl get secrets -n postgres-operator "${PG_CLUSTER_USER_SECRET_NAME}" -o go-template='{{.data.dbname | base64decode}}') 
+psql -h localhost 
+
+
+standby_cluster:
+    host: 10.1.0.109
+    port: 5432
+    primary_slot_name: main_repslot
+    create_replica_methods:
+    - basebackup

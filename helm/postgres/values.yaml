@@ -9,7 +9,7 @@
 
 # name is the name of the cluster. This defaults to the name of the Helm
 # release.
-# name: hippo
+name: helm-hippo
 
 # postgresVersion sets the version to deploy. This version number needs to be
 # available as one of the "RELATED_IMAGE_POSTGRES_..." images as part of the PGO
@@ -108,15 +108,15 @@ postgresVersion: 16
 # For example, to set up an instance set with HA (due to the default pod
 # topology spread constraints)
 #
-# instances:
-#   - name: pgha1
-#     replicas: 2
-#     dataVolumeClaimSpec:
-#       accessModes:
-#       - "ReadWriteOnce"
-#       resources:
-#         requests:
-#           storage: 1Gi
+instances:
+  - name: helm
+    replicas: 3
+    dataVolumeClaimSpec:
+      accessModes:
+      - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 1Gi
 # instances: {}
 
 # port sets the port that Postgres listens on. Defaults to 5432.
@@ -124,12 +124,22 @@ postgresVersion: 16
 
 # patroni lets you set the Patroni configuration for the Postgres cluster.
 # for example, to set up synchronous replication:
-# patroni:
-#   dynamicConfiguration:
-#     synchronous_mode: true
-#     postgresql:
-#       parameters:
-#         synchronous_commit: "on"
+patroni:
+  dynamicConfiguration:
+    synchronous_mode: true
+    postgresql:
+      parameters:
+        synchronous_commit: "on"
+      use_slots: true
+    slots:
+      dr_slot:
+        type: physical
+  #  standby_cluster:
+  #   host: 10.1.0.109
+  #   port: 5432
+  #   primary_slot_name: main_repslot
+  #   create_replica_methods:
+  #   - basebackup
 # patroni: {}
 
 # users sets any custom Postgres users and databases that they have  access to
@@ -159,8 +169,8 @@ postgresVersion: 16
 # "true" enables the standby cluster while "repoName" points to a pgBackRest
 # archive to replay WAL files from, and "host" and "port" point to a primary
 # cluster from which to stream data.
-# standby:
-#   enabled: false
+standby:
+   enabled: false
 #   repoName: repo1
 #   host: "192.0.2.2"
 #   port: 5432

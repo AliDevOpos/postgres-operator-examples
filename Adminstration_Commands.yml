@@ -1,0 +1,24 @@
+-- check cluster role master/slave
+kubectl  -n postgres-operator get  pods -l postgres-operator.crunchydata.com/cluster=hippo -L postgres-operator.crunchydata.com/instance -L postgres-operator.crunchydata.com/role
+
+
+-- add standby_cluster: by patch
+kubectl patch postgrescluster/hippo -n postgres-operator --type merge --patch '{"spec": {"patroni": {"dynamicConfiguration": {"standby_cluster": {"host": "hippo-primary.postgres-operator.svc", "port": 5432, "primary_slot_name": "main_repslot", "create_replica_methods": ["basebackup"]}}}}}'
+##
+-- remove standby_cluster: by patch 
+kubectl patch postgrescluster/hippo -n postgres-operator --type merge --patch '{"spec": {"patroni": {"dynamicConfiguration": {"standby_cluster": null}}}}'
+
+-- create replication slot by patch:
+kubectl patch postgrescluster/hippo -n postgres-operator --type merge --patch '{"spec": {"patroni": {"dynamicConfiguration": {"slots": {"main_repslot": {"type": "physical"}}}}}}'
+
+-- remove  replication slot by patch:
+
+kubectl patch postgrescluster/hippo -n postgres-operator --type merge --patch '{"spec": {"patroni": {"dynamicConfiguration": {"slots": {"dr_slot": null}}}}}'
+
+
+-- enable standby standby_cluster:
+kubectl patch postgrescluster/hippo-standby -n postgres-operator --type merge --patch '{"spec": {"standby" : {"enabled" : true }}}'  
+
+
+-- disable standby standby_cluster:
+kubectl patch postgrescluster/hippo-standby -n postgres-operator --type merge --patch '{"spec": {"standby" : {"enabled" : false }}}'  

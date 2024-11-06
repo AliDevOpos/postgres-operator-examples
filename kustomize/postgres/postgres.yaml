@@ -3,13 +3,38 @@ kind: PostgresCluster
 metadata:
   name: hippo
 spec:
+  patroni:
+    dynamicConfiguration:
+      synchronous_mode: true
+      synchronous_mode_strict: true
+      postgresql:
+        use_slots: true
+      slots:
+        dr_slot:
+          type: physical
+ #    standby_cluster:
+ #      host: 10.1.0.109
+ #      port: 5432
+ #      primary_slot_name: main_repslot
+ #      create_replica_methods:
+ #      - basebackup
   postgresVersion: 16
   users:
     - name: rhino
       databases:
         - zoo
+    - name: ali
+      databases:
+        - ali
   instances:
     - name: instance1
+      dataVolumeClaimSpec:
+        accessModes:
+        - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: 1Gi
+    - name: instance2
       dataVolumeClaimSpec:
         accessModes:
         - "ReadWriteOnce"
@@ -26,4 +51,21 @@ spec:
             - "ReadWriteOnce"
             resources:
               requests:
-                storage: 1Gi
+                storage: 4Gi
+#  proxy:
+#    pgBouncer:
+#      replicas: 2
+#      affinity:
+#        podAntiAffinity:
+#          preferredDuringSchedulingIgnoredDuringExecution:
+#          - weight: 1
+#            podAffinityTerm:
+#              topologyKey: kubernetes.io/hostname
+#              labelSelector:
+#                matchLabels:
+#                  postgres-operator.crunchydata.com/cluster: hippo-ha
+#                  postgres-operator.crunchydata.com/role: pgbouncer
+  standby:
+    enabled: false
+    host: "hippo-standby-standby-instance1-fcv7-0.hippo-standby-pods.postgres-operator.svc.cluster.local"
+    port: 5432
